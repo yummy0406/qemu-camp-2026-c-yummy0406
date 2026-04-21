@@ -3,39 +3,47 @@
 #include <string.h>
 
 typedef struct {
-    char id[20];
-    char name[50];
-    int age;
+  char id[20];
+  char name[50];
+  int age;
 } Student;
 
 int main() {
-    FILE *file = fopen("students.txt", "r");
-    if (file == NULL) {
-        printf("无法打开文件\n");
-        return 1;
+  FILE *file = fopen("students.txt", "r");
+  if (file == NULL) {
+    printf("无法打开文件\n");
+    return 1;
+  }
+
+  Student *students[3];
+
+  for (int i = 0; i < 3; i++) {
+    students[i] = (Student *)malloc(sizeof(Student));
+    if (students[i] == NULL) {
+      printf("内存分配失败\n");
+      fclose(file);
+      return 1;
     }
-    
-    Student *students[3];
-    
-    for (int i = 0; i < 3; i++) 
-    {
-	    // TODO: 在这里添加你的代码
-        // I AM NOT DONE
+    if (fscanf(file, "%s %s %d", students[i]->id, students[i]->name,
+               &students[i]->age) != 3) {
+      printf("读取文件失败\n");
+      // 清理已分配的内存
+      for (int j = 0; j <= i; j++)
+        free(students[j]);
+      fclose(file);
+      return 1;
     }
-    fclose(file);
-    
-    for (int i = 0; i < 3; i++) 
-    {
-        printf("学号：%s, 姓名：%s, 年龄：%d\n", 
-               students[i]->id, 
-               students[i]->name, 
-               students[i]->age);
-    }
-    
-    for (int i = 0; i < 3; i++) 
-    {
-        free(students[i]);
-    }
-    
-    return 0;
+  }
+  fclose(file);
+
+  for (int i = 0; i < 3; i++) {
+    printf("学号：%s, 姓名：%s, 年龄：%d\n", students[i]->id, students[i]->name,
+           students[i]->age);
+  }
+
+  for (int i = 0; i < 3; i++) {
+    free(students[i]);
+  }
+
+  return 0;
 }
