@@ -21,13 +21,13 @@ TARGET_PATH := $(BINDIR)/$(TARGET)
 
 all: $(TARGET_PATH)
 
-$(TARGET_PATH): $(OBJS)
-	mkdir -p $(BINDIR)
-	$(CC) $(CFLAGS) -o $@ $^ $(LINKLIBS) -lmysed -lmywc -lmytrans -lmyfile
-
 $(OBJDIR)/%.o: %.c
-	mkdir -p $(OBJDIR)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	@mkdir -p $(OBJDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(TARGET_PATH): $(OBJS)
+	@mkdir -p $(BINDIR)
+	$(CC) -o $@ $^ $(LINKLIBS) -lmysed -lmywc -lmytrans -lmyfile
 
 clean:
 	@rm -rf $(OBJDIR)/*.o $(TARGET_PATH)

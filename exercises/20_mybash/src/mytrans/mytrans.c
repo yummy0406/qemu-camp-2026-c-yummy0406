@@ -7,15 +7,24 @@
 #include <string.h>
 
 void trim(char *str) {
-  char *end;
-  while (isspace((unsigned char)*str))
-    str++;
-  if (*str == 0)
+  if (!str)
     return;
-  end = str + strlen(str) - 1;
-  while (end > str && isspace((unsigned char)*end))
+
+  // 去除前导空格
+  char *start = str;
+  while (*start && isspace((unsigned char)*start)) {
+    start++;
+  }
+
+  // 去除末尾空格
+  char *end = str + strlen(str) - 1;
+  while (end >= start && isspace((unsigned char)*end)) {
     end--;
-  end[1] = '\0';
+  }
+
+  // 复制修剪后的字符串
+  memmove(str, start, end - start + 1);
+  str[end - start + 1] = '\0';
 }
 
 int load_dictionary(const char *filename, HashTable *table,
@@ -29,24 +38,41 @@ int load_dictionary(const char *filename, HashTable *table,
   char line[1024];
   char current_word[100] = {0};
   char current_translation[1024] = {0};
+  int in_entry = 0;
 
   while (fgets(line, sizeof(line), file)) {
-    line[strcspn(line, "\r\n")] = 0;
-    if (line[0] == '#') {
-      if (current_word[0] != '\0' && current_translation[0] != '\0') {
+    line[strcspn(line, "\n")] = '\0';
+    trim(line);
+
+    if (strlen(line) == 0) {
+      continue;
+    }
+
+    // 检查是否是词条开始（以单词开头，后跟制表符）
+    char *tab_pos = strchr(line, '\t');
+    if (tab_pos) {
+      // 如果有前一个词条，保存它
+      if (in_entry && strlen(current_word) > 0) {
         hash_table_insert(table, current_word, current_translation);
         (*dict_count)++;
       }
-      strncpy(current_word, line + 1, sizeof(current_word) - 1);
-      current_word[sizeof(current_word) - 1] = '\0';
-      current_translation[0] = '\0';
-    } else if (strncmp(line, "Trans:", 6) == 0) {
-      strncpy(current_translation, line + 6, sizeof(current_translation) - 1);
-      current_translation[sizeof(current_translation) - 1] = '\0';
+
+      // 新词条
+      int word_len = tab_pos - line;
+      strncpy(current_word, line, word_len);
+      current_word[word_len] = '\0';
+
+      strcpy(current_translation, tab_pos + 1);
+      in_entry = 1;
+    } else if (in_entry) {
+      // 继续当前词条的翻译
+      strcat(current_translation, "@");
+      strcat(current_translation, line);
     }
   }
 
-  if (current_word[0] != '\0' && current_translation[0] != '\0') {
+  // 保存最后一个词条
+  if (in_entry && strlen(current_word) > 0) {
     hash_table_insert(table, current_word, current_translation);
     (*dict_count)++;
   }
@@ -69,7 +95,8 @@ int __cmd_mytrans(const char *filename) {
 
   printf("=== 哈希表版英语翻译器（支持百万级数据）===\n");
   uint64_t dict_count = 0;
-  if (load_dictionary("src/mytrans/dict.txt", table, &dict_count) != 0) {
+  if (load_dictionary("/workspace/exercises/20_mybash/src/mytrans/dict.txt",
+                      table, &dict_count) != 0) {
     fprintf(stderr, "加载词典失败，请确保 dict.txt 存在。\n");
     free_hash_table(table);
     return 1;

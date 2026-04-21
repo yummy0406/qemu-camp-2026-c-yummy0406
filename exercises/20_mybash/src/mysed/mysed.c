@@ -3,100 +3,112 @@
 #include <stdlib.h>
 #include <string.h>
 
-int parse_replace_command(const char* cmd, char** old_str, char** new_str) {
-    // 检查输入参数有效性
-    if (!cmd || !old_str || !new_str) {
-        return -1;
-    }
-    
-    // 初始化输出参数
-    *old_str = NULL;
-    *new_str = NULL;
-    
-    if (cmd[0] != 's' || cmd[1] != '/') return -1;
+int parse_replace_command(const char *cmd, char **old_str, char **new_str) {
+  // 检查输入参数有效性
+  if (!cmd || !old_str || !new_str) {
+    return -1;
+  }
 
-    const char* start_old = cmd + 2;
-    const char* end_old = strchr(start_old, '/');
-    if (!end_old) return -1;
+  // 初始化输出参数
+  *old_str = NULL;
+  *new_str = NULL;
 
-    size_t old_len = end_old - start_old;
-    *old_str = (char*)malloc(old_len + 1);
-    strncpy(*old_str, start_old, old_len);
-    (*old_str)[old_len] = '\0';
+  // 检查命令格式: s/old/new/
+  if (cmd[0] != 's' || cmd[1] != '/') {
+    return -1;
+  }
 
-    const char* start_new = end_old + 1;
-    const char* end_new = strchr(start_new, '/');
-    if (!end_new) {
-        free(*old_str);
-        *old_str = NULL;
-        return -1;
-    }
+  // 寻找分隔符
+  const char *start = cmd + 2; // 跳过 "s/"
+  const char *sep1 = strchr(start, '/');
+  if (!sep1)
+    return -1;
 
-    size_t new_len = end_new - start_new;
-    *new_str = (char*)malloc(new_len + 1);
-    strncpy(*new_str, start_new, new_len);
-    (*new_str)[new_len] = '\0';
+  const char *sep2 = strchr(sep1 + 1, '/');
+  if (!sep2)
+    return -1;
 
-    return 0;
+  // 提取old_str
+  int old_len = sep1 - start;
+  *old_str = malloc(old_len + 1);
+  strncpy(*old_str, start, old_len);
+  (*old_str)[old_len] = '\0';
+
+  // 提取new_str
+  int new_len = sep2 - (sep1 + 1);
+  *new_str = malloc(new_len + 1);
+  strncpy(*new_str, sep1 + 1, new_len);
+  (*new_str)[new_len] = '\0';
+
+  return 0;
 }
 
-void replace_first_occurrence(char* str, const char* old, const char* new) {
-    // 检查输入参数有效性
-    if (!str || !old || !new) {
-        return;
-    }
-    
-    char* pos = strstr(str, old);
-    if (!pos) return;
+void replace_first_occurrence(char *str, const char *old, const char *new) {
+  // 检查输入参数有效性
+  if (!str || !old || !new) {
+    return;
+  }
 
-    size_t old_len = strlen(old);
-    size_t new_len = strlen(new);
-    size_t tail_len = strlen(pos + old_len);
+  // 查找第一个匹配
+  char *pos = strstr(str, old);
+  if (!pos) {
+    return; // 未找到
+  }
 
-    memmove(pos + new_len, pos + old_len, tail_len + 1);
-    memcpy(pos, new, new_len);
+  int old_len = strlen(old);
+  int new_len = strlen(new);
+  int str_len = strlen(str);
+
+  // 检查是否需要移动内存
+  if (new_len != old_len) {
+    // 向后移动（或向前，取决于新旧字符串长度）
+    memmove(pos + new_len, pos + old_len, str_len - (pos - str) - old_len + 1);
+  }
+
+  // 复制新字符串
+  memcpy(pos, new, new_len);
 }
 
-int __cmd_mysed(const char* rules, const char* str) {
-    // 检查输入参数有效性
-    if (!rules || !str) {
-        fprintf(stderr, "Error: NULL rules or str parameter\n");
-        return 1;
-    }
+int __cmd_mysed(const char *rules, const char *str) {
+  // 检查输入参数有效性
+  if (!rules || !str) {
+    fprintf(stderr, "Error: NULL rules or str parameter\n");
+    return 1;
+  }
 
-    printf("rules: %s\n", rules);
-    printf("str: %s\n", str);
+  printf("rules: %s\n", rules);
+  printf("str: %s\n", str);
 
-    char* old_str = NULL;
-    char* new_str = NULL;
+  char *old_str = NULL;
+  char *new_str = NULL;
 
-    // 解析规则，例如 "s/old/new/"
-    if (parse_replace_command(rules, &old_str, &new_str) != 0) {
-        fprintf(stderr, "Invalid replace command format. Use 's/old/new/'\n");
-        return 1;
-    }
+  // 解析规则，例如 "s/old/new/"
+  if (parse_replace_command(rules, &old_str, &new_str) != 0) {
+    fprintf(stderr, "Invalid replace command format. Use 's/old/new/'\n");
+    return 1;
+  }
 
-    if (!old_str || !new_str) {
-        fprintf(stderr, "Error: Failed to parse old/new strings from rules\n");
-        free(old_str);
-        free(new_str);
-        return 1;
-    }
-
-    // 复制原始字符串，因为我们可能会修改它（避免修改输入参数）
-    char line[1024];
-    strncpy(line, str, sizeof(line) - 1);
-    line[sizeof(line) - 1] = '\0';  // 确保终止
-
-    // 执行替换：在 line 中把 old_str 替换为 new_str（第一次出现）
-    replace_first_occurrence(line, old_str, new_str);
-
-    // 输出结果（建议加上换行，除非 str 本身带了）
-    printf("%s\n", line);
-
-    // 释放动态分配的内存
+  if (!old_str || !new_str) {
+    fprintf(stderr, "Error: Failed to parse old/new strings from rules\n");
     free(old_str);
     free(new_str);
+    return 1;
+  }
 
-    return 0;
+  // 复制原始字符串，因为我们可能会修改它（避免修改输入参数）
+  char line[1024];
+  strncpy(line, str, sizeof(line) - 1);
+  line[sizeof(line) - 1] = '\0'; // 确保终止
+
+  // 执行替换：在 line 中把 old_str 替换为 new_str（第一次出现）
+  replace_first_occurrence(line, old_str, new_str);
+
+  // 输出结果（建议加上换行，除非 str 本身带了）
+  printf("%s\n", line);
+
+  // 释放动态分配的内存
+  free(old_str);
+  free(new_str);
+
+  return 0;
 }

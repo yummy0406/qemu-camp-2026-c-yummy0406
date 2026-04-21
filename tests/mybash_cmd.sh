@@ -1,8 +1,8 @@
-myfile bin/mybash
-myfile obj/mybash/main.o
+myfile ../../exercises/20_mybash/bin/mybash
+myfile ../../exercises/20_mybash/obj/src/mybash/main.o
 
 mysed s/unix/linux/ "unix is opensource. unix is free os."
 
-mytrans src/mytrans/text.txt
+mytrans ../../exercises/20_mybash/src/mytrans/text.txt
 
-mywc src/mytrans/text.txt
+mywc ../../exercises/20_mybash/src/mytrans/text.txt

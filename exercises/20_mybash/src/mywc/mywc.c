@@ -26,6 +26,7 @@ void add_word(WordCount **hash_table, const char *word) {
   unsigned int index = hash(word);
   WordCount *entry = hash_table[index];
 
+  // 检查单词是否已存在
   while (entry != NULL) {
     if (strcmp(entry->word, word) == 0) {
       entry->count++;
@@ -34,7 +35,12 @@ void add_word(WordCount **hash_table, const char *word) {
     entry = entry->next;
   }
 
-  WordCount *new_entry = (WordCount *)malloc(sizeof(WordCount));
+  // 创建新的单词条目
+  WordCount *new_entry = malloc(sizeof(WordCount));
+  if (new_entry == NULL) {
+    return;
+  }
+
   strncpy(new_entry->word, word, MAX_WORD_LEN - 1);
   new_entry->word[MAX_WORD_LEN - 1] = '\0';
   new_entry->count = 1;
@@ -47,13 +53,36 @@ void print_word_counts(WordCount **hash_table) {
   printf("Word Count Statistics:\n");
   printf("======================\n");
 
+  // 收集所有单词到数组，然后排序
+  WordCount **all_words = malloc(sizeof(WordCount *) * HASH_SIZE * 100);
+  int total_words = 0;
+
   for (int i = 0; i < HASH_SIZE; i++) {
     WordCount *entry = hash_table[i];
     while (entry != NULL) {
-      printf("%-21s%d\n", entry->word, entry->count);
+      all_words[total_words++] = entry;
       entry = entry->next;
     }
   }
+
+  // 按计数降序排序
+  for (int i = 0; i < total_words - 1; i++) {
+    for (int j = i + 1; j < total_words; j++) {
+      if (all_words[i]->count < all_words[j]->count) {
+        WordCount *tmp = all_words[i];
+        all_words[i] = all_words[j];
+        all_words[j] = tmp;
+      }
+    }
+  }
+
+  // 打印前20个单词
+  for (int i = 0; i < total_words && i < 20; i++) {
+    printf("%s%*d\n", all_words[i]->word, 20 - (int)strlen(all_words[i]->word),
+           all_words[i]->count);
+  }
+
+  free(all_words);
 }
 
 // 释放哈希表内存
@@ -107,7 +136,7 @@ void process_file(const char *filename) {
   wc_free_hash_table(hash_table);
 }
 
-int __cmd_mywc(const char* filename) {
+int __cmd_mywc(const char *filename) {
   process_file(filename);
   return 0;
 }

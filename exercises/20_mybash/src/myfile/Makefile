@@ -19,13 +19,13 @@ OBJS := $(patsubst %.o,$(OBJDIR)/%.o,$(OBJS))
 
 all: $(LIB_PATH)
 
-$(LIB_PATH): $(OBJS)
-	mkdir -p $(OBJDIR)
-	ar rcs $@ $^
-
 $(OBJDIR)/%.o: %.c
-	mkdir -p $(OBJDIR)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	@mkdir -p $(OBJDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(LIB_PATH): $(OBJS)
+	@mkdir -p $(OBJDIR)
+	ar rcs $@ $^
 
 clean:
 	@rm -rf $(OBJDIR)/*.o $(LIB_PATH)

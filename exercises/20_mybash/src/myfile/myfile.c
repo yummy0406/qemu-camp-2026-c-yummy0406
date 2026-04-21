@@ -50,12 +50,6 @@ int __cmd_myfile(const char *filename) {
     return 1;
   }
 
-  if (memcmp(ehdr.e_ident, ELFMAG, SELFMAG) != 0) {
-    printf("Not an ELF file\n");
-    close(fd);
-    return 1;
-  }
-
   print_elf_type(ehdr.e_type);
   close(fd);
   return 0;
