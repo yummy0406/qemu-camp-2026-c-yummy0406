@@ -1,7 +1,7 @@
 #include "mywc.h"
 #include <stdio.h>
 
-// I AM NOT DONE
+// main function
 int main(int argc, char *argv[]) {
   const char* filepath = "./text.txt";
 
