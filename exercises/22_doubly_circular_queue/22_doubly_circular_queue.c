@@ -16,19 +16,24 @@ static link get_last(void) {
     return g_last;  // 若为空表示队列为空
 }
 
-static void enqueue_int(int v) {
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
-}
+static void enqueue_int(int v) { insert(make_node(v)); }
 
 static int dequeue_int(int *out) {
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    link p = get_last();
+    if (p == NULL) return 0;
+    if (out) *out = p->data;
+    delete (p);
+    free_node(p);
+    return 1;
 }
 
 static void print_dequeue_n(int n) {
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
+    for (int i = 0; i < n; i++) {
+        int v;
+        if (dequeue_int(&v)) {
+            printf("%d%s", v, (i == n - 1) ? "" : " ");
+        }
+    }
 }
 
 int main(void) {

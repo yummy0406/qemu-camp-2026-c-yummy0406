@@ -1,44 +1,44 @@
+#include <execinfo.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <execinfo.h>
 
-#ifdef TODO
-
-#define DEBUG_PRINT(fmt, ...) 
-    // TODO: 在这里添加你的代码
-    // I AM NOT DONE
-
+#if DEBUG_LEVEL == 1
+#define DEBUG_PRINT(fmt, ...) printf("DEBUG: func=%s, line=%d\n", __func__, __LINE__)
+#elif DEBUG_LEVEL == 2
+#define DEBUG_PRINT(fmt, ...) printf("DEBUG: func=%s, line=%d, " fmt "\n", __func__, __LINE__, ##__VA_ARGS__)
 #else
-
-#define DEBUG_PRINT(fmt, ...) do {} while (0)
-
+#define DEBUG_PRINT(fmt, ...)                                    \
+    do {                                                         \
+        void *trace[16];                                         \
+        int n = backtrace(trace, 16);                            \
+        printf("DEBUG: func=%s, line=%d\n", __func__, __LINE__); \
+        backtrace_symbols_fd(trace, n, 1);                       \
+    } while (0)
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 //! MUST BE ENSURE THE DEBUG_PRINT("x=%d", x) AT THE 48 LINE
 
